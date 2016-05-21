@@ -39,10 +39,12 @@ public class JMSServer implements MessageListener{
         try {
             createConnectionAndSession();
             createDestination();
-            // han sido creo la conexion y session y destinos
-            consumer = session.createConsumer(queueIn);
+            // Estamos seguros que se creo conexion, session y destino
+            // creamos el selector
+            String selector = "OPERACION = 'Recarga'";
+            consumer = session.createConsumer(queueIn, selector);
             consumer.setMessageListener(this);
-            LOG.info("esperando por mensaje ....");
+            LOG.info("Esperando por el mensaje ...");
         } catch (JMSException e) {
             e.printStackTrace();
         }

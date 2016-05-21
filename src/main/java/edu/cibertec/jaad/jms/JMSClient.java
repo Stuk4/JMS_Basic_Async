@@ -16,7 +16,7 @@ import java.util.UUID;
 public class JMSClient {
 
     public static final Logger LOG = Logger.getLogger(JMSClient.class);
-    public static final long WAITING_MSG = 601;
+    public static final long WAITING_MSG = 6001;
 
     public static final String JMS_CONN_FAC = "jms/QUEUECF";
     public static final String JMS_QUEUE_IN = "jms/QueueIn";
@@ -54,6 +54,9 @@ public class JMSClient {
             msgReq.setDouble("MONTO", 35.0);
             String correlationId = UUID.randomUUID().toString();
             msgReq.setJMSCorrelationID(correlationId);
+            producer = session.createProducer(queueIn);
+            msgReq.setStringProperty("OPERACION","Recarga");
+
             producer.send(msgReq);
 
             String selector = "JMSCorrelationID='"+correlationId+"'";

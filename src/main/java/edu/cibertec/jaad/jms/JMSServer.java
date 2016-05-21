@@ -6,14 +6,14 @@ import javax.jms.*;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import java.util.UUID;
 
 /**
- * @author Carlos Larico [Stuk4] cdaniel.lf@gmail.com
+ * Created by Java-VS on 21/05/2016.
  */
-public class JMSClient {
+public class JMSServer implements MessageListener{
 
-    public static final Logger LOG = Logger.getLogger(JMSClient.class);
+
+    public static final Logger LOG = Logger.getLogger(JMSServer.class);
     public static final long WAITING_MSG = 601;
 
     public static final String JMS_CONN_FAC = "jms/QUEUECF";
@@ -30,44 +30,49 @@ public class JMSClient {
     private MessageProducer producer;
     private MessageConsumer consumer;
 
+
+
     /**
      * execute
      */
     public void execute(){
-        createConnectionAndSession();
-        createDestination();
-        createProducerAndConsumer();
-        processMessage();
-        closeResources();
+        try {
+            createConnectionAndSession();
+            createDestination();
+            // han sido creo la conexion y session y destinos
+            consumer = session.createConsumer(queueIn);
+            consumer.setMessageListener(this);
+            LOG.info("esperando por mensaje ....");
+        } catch (JMSException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
-    /**
-     * Process Message
-     */
-    private void processMessage(){
+
+    @Override
+    public void onMessage(Message message) {
         try {
-            //send message
-            MapMessage msgReq = session.createMapMessage();
-            msgReq.setString("OPERACION","Recarga");
-            msgReq.setDouble("MONTO", 35.0);
-            String correlationId = UUID.randomUUID().toString();
-            msgReq.setJMSMessageID(correlationId);
-            producer.send(msgReq);
-
-            LOG.info("Esperando por respuesta " + WAITING_MSG  + "seg");
-            // recibiendo msg
-            TextMessage msgRes = (TextMessage) consumer.receive(WAITING_MSG);
-
-            LOG.info("Mensaje recibido " + msgRes);
-            String result = msgRes == null? "SIN RESPUESTA" : msgRes.getText();
-
-            LOG.info("Result: " +result);
+            // recepcion del msg
+            MapMessage msg = (MapMessage) message;
+            LOG.info("REcibido " + msg);
+            LOG.info("operacion " + msg.getString("OPERACION"));
+            LOG.info("MONTO " + msg.getDouble("MONTO"));
 
 
+            // responder
 
-        } catch (JMSException e) {
-            LOG.error("Error in process message " , e);
+            MessageProducer producer = session.createProducer(queueOut);
+            TextMessage msgResp = session.createTextMessage("OK");
+            producer.send(msgResp);
+            producer.close();
+            LOG.info("Mensaje Enviado " + msgResp   );
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
     }
 
     /**
@@ -79,7 +84,7 @@ public class JMSClient {
             factory = (ConnectionFactory) ctx.lookup(JMS_CONN_FAC);
             connection = factory.createConnection();
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        } catch (NamingException|JMSException e) {
+        } catch (NamingException |JMSException e) {
             LOG.error("Error loading context ", e);
         }
 
@@ -103,8 +108,8 @@ public class JMSClient {
      */
     private void createProducerAndConsumer(){
         try {
-            producer = session.createProducer(queueIn);
-            consumer = session.createConsumer(queueOut);
+            producer = session.createProducer(queueOut); // es al revez del cliente por que es el
+            consumer = session.createConsumer(queueIn);  // servidor el que esta consumiendo
         } catch (JMSException e) {
             LOG.error("Error creating produces/consumer",e);
         }
@@ -128,12 +133,14 @@ public class JMSClient {
         System.exit(0);
     }
 
+
     /**
      * main
-     * @param args params
+     * @param args
      */
     public static void main(String[] args) {
-        new JMSClient().execute();
+        JMSServer server = new JMSServer();
+        server.execute();
     }
 
 

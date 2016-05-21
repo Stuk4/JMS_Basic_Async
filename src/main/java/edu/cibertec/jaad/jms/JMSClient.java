@@ -56,8 +56,11 @@ public class JMSClient {
             msgReq.setJMSCorrelationID(correlationId);
             producer.send(msgReq);
 
-            LOG.info("Esperando por respuesta " + WAITING_MSG  + "seg");
+            String selector = "JMSCorrelationID='"+correlationId+"'";
+            LOG.info("Selector creado " + selector);
+            consumer = session.createConsumer(queueOut,selector);
             // recibiendo msg
+            LOG.info("Esperando por respuesta " + WAITING_MSG  + "seg");
             TextMessage msgRes = (TextMessage) consumer.receive(WAITING_MSG);
 
             LOG.info("Mensaje recibido " + msgRes);

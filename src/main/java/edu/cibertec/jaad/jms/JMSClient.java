@@ -6,6 +6,7 @@ import javax.jms.*;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import java.util.UUID;
 
 /**
  * @author Carlos Larico [Stuk4] cdaniel.lf@gmail.com
@@ -35,15 +36,26 @@ public class JMSClient {
     public void execute(){
         createConnectionAndSession();
         createDestination();
+        createProducerAndConsumer()
         processMessage();
         closeResources();
     }
 
     /**
-     * process Message
+     * Process Message
      */
-    public void processMessage(){
-
+    private void processMessage(){
+        try {
+            //send message
+            MapMessage msgReq = session.createMapMessage();
+            msgReq.setString("OPERACION","Recarga");
+            msgReq.setDouble("MONTO", 35.0);
+            String correlationId = UUID.randomUUID().toString();
+            msgReq.setJMSMessageID(correlationId);
+            producer.send(msgReq);
+        } catch (JMSException e) {
+            LOG.error("Error in process message " , e);
+        }
     }
 
     /**
@@ -73,6 +85,19 @@ public class JMSClient {
             LOG.error("Error create destination", e);
         }
     }
+
+    /**
+     * create producer and consumer
+     */
+    private void createProducerAndConsumer(){
+        try {
+            producer = session.createProducer(queueIn);
+            consumer = session.createConsumer(queueOut);
+        } catch (JMSException e) {
+            LOG.error("Error creating produces/consumer",e);
+        }
+    }
+
 
     /**
      * close resources

@@ -30,9 +30,26 @@ public class JMSClient {
     private MessageConsumer consumer;
 
     /**
+     * execute
+     */
+    public void execute(){
+        createConnectionAndSession();
+        createDestination();
+        processMessage();
+        closeResources();
+    }
+
+    /**
+     * process Message
+     */
+    public void processMessage(){
+
+    }
+
+    /**
      * jms lookUp
      */
-    public void jmsLookUp(){
+    public void createConnectionAndSession(){
         try {
             ctx = new InitialContext();
             factory = (ConnectionFactory) ctx.lookup(JMS_CONN_FAC);

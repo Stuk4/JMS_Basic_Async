@@ -65,6 +65,9 @@ public class JMSServer implements MessageListener{
 
             MessageProducer producer = session.createProducer(queueOut);
             TextMessage msgResp = session.createTextMessage("OK");
+            // Se agrega el mismo correlationid
+            msgResp.setJMSCorrelationID(msg.getJMSCorrelationID());
+
             producer.send(msgResp);
             producer.close();
             LOG.info("Mensaje Enviado " + msgResp   );

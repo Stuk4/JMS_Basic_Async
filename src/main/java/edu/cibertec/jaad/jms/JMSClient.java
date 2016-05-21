@@ -6,6 +6,8 @@ import javax.jms.*;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.swing.*;
+import java.awt.*;
 import java.util.UUID;
 
 /**
@@ -51,7 +53,7 @@ public class JMSClient {
             msgReq.setString("OPERACION","Recarga");
             msgReq.setDouble("MONTO", 35.0);
             String correlationId = UUID.randomUUID().toString();
-            msgReq.setJMSMessageID(correlationId);
+            msgReq.setJMSCorrelationID(correlationId);
             producer.send(msgReq);
 
             LOG.info("Esperando por respuesta " + WAITING_MSG  + "seg");
@@ -133,7 +135,7 @@ public class JMSClient {
      * @param args params
      */
     public static void main(String[] args) {
-        new JMSClient().execute();
+       new JMSClient().execute();
     }
 
 
